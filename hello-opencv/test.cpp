@@ -18,35 +18,54 @@ using namespace cv;
 class image_defect
 {
 private:
+    int m_b_th{ 163 };
+    int m_x1{ 30 };
+    int m_y1{ 140 };
+    int m_x4{ 1470 };
+    int m_y4{ 640 };
+    int m_lower_bound{ 20 };
+    int m_upper_bound{ 2000 };
+    int m_dot_area{ 15 };
 
 public:
-    image_defect();
+
+    
+
+    // Default constructor
+    image_defect() {}
+
+    // Initialize a image_defect 
+    explicit image_defect(int i) : m_b_th(i), m_x1(i), m_y1(i), m_x4(i), 
+        m_y4(i), m_lower_bound(i), m_upper_bound(i), m_dot_area(i)
+    {}
+
+   
+    image_defect(int b_th, int x1, int y1, int x4, int y4, int lower_bound,
+        int upper_bound, int dot_area)
+        : m_b_th(b_th), m_x1(x1), m_y1(y1), m_x4(x4), m_y4(y4)
+        , m_lower_bound(lower_bound), m_upper_bound(upper_bound)
+        , m_dot_area(dot_area)
+    {}
+
+    int r_lower_bound() { return m_lower_bound; }
+    int r_b_th() { return m_b_th; }
+    int r_x1() { return m_x1; }
+    int r_y1() { return m_y1; }
+    int r_x4() { return m_x4; }
+    int r_y4() { return m_y4; }
+    
+
     std::string name;
     void setName(std::string);
 };
 
-// define the class constructor
-image_defect::image_defect()
-{
-    //brightness
-    int b_th = 163;
-    int x1 = 30;
-    int y1 = 140;
-    int x4 = 1470;
-    int y4 = 640;
-    // 光影誤判面積大約為10 pixel
-    // 瑕疵面積大小
-    int lower_bound = 20;
-    int upper_bound = 2000; 
-    int dot_area = 15;
-}
+
+
 
 void image_defect::setName(std::string excel_name)
 {
     name = excel_name;
 }
-
-
 
 
 std::vector<cv::Rect> detectLetters(cv::Mat img)
@@ -80,21 +99,20 @@ std::vector<cv::Rect> detectLetters(cv::Mat img)
     return boundRect;
 }
 
-bool compareContourAreas(std::vector<cv::Point> contour1, std::vector<cv::Point> contour2)
-{
-    double i = fabs(contourArea(cv::Mat(contour1)));
-    double j = fabs(contourArea(cv::Mat(contour2)));
-    return (i < j);
-}
 
 int main(int argc, const char** argv)
 {
-
     //Read
     cv::Mat img = cv::imread("C:\\Users\\wade.huang\\Desktop\\code\\CCD-Test-master\\data\\LAAK256002_NG_A_431_1.bmp");
 
-    int s1 = 5;
-    int s2 = 4000;
+    image_defect D ;
+    const int s1   = D.r_lower_bound();
+    const int b_th = D.r_b_th();
+    const int x1   = D.r_x1();
+    const int y1   = D.r_y1();
+    const int x4   = D.r_x4();
+    const int y4   = D.r_y4();
+
     cv::Mat blur_img;
     cv::GaussianBlur(img, blur_img, Size(3,3),0,0);
      
@@ -109,22 +127,7 @@ int main(int argc, const char** argv)
     vector<Vec4i> hierarchy;
     cv::findContours(image_final, contours0, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE);
 
-    // comparison function object
- 
-    
-    /*
-    std::sort(contours0.begin(), contours0.end(), compareContourAreas);
-    // grab contours
-    std::vector<cv::Point> biggestContour = contours0[contours0.size() - 1];
-    std::vector<cv::Point> smallestContour = contours0[0];
-    */
-    int b_th = 163;
-    const int x1 = 80;
-    const int y1 = 140;
-    const int x4 = 1600;
-    const int y4 = 640;
-
-    
+  
     cv::rectangle(img, cv::Point(x1, y1), cv::Point(x4, y4), 
         (0, 255, 255), 2);
 
@@ -156,7 +159,7 @@ int main(int argc, const char** argv)
         
 
         if (x4 > x && x > x1 && y4 > y && y > y1 && 
-            contourArea(contours0[i]) > 10 
+            contourArea(contours0[i]) > s1
             && (int)gray_img.at<uchar>(y, x) > 80
            )
         {
